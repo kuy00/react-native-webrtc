@@ -1,4 +1,4 @@
-import useWsClient from "@/hooks/useWsClient";
+import useWsClient from "@/hooks/useWebSocket";
 import { getRandomInt } from "@/utils/random";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useEffect, useState } from "react";
