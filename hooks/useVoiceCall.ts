@@ -6,9 +6,11 @@ import useWebSocket from "./useWebSocket";
 
 const useVoiceCall = (roomId?: string) => {
   const { sendMessage, lastMessage } = useWebSocket();
-  const [isInCall, setIsInCall] = useState(false);
+  const [callStatus, setCallStatus] = useState<
+    "idle" | "waiting" | "connected"
+  >("idle");
 
-  useBlockExit(isInCall);
+  useBlockExit(callStatus !== "idle");
 
   const init = useCallback(
     (userId: number) => {
@@ -58,7 +60,7 @@ const useVoiceCall = (roomId?: string) => {
           Alert.alert("Error", lastMessage.data.reason);
           break;
         case "call.incoming":
-          setIsInCall(true);
+          setCallStatus("waiting");
           router.push({
             pathname: "/call/incoming",
             params: {
@@ -69,7 +71,7 @@ const useVoiceCall = (roomId?: string) => {
           });
           break;
         case "call.ringing":
-          setIsInCall(true);
+          setCallStatus("waiting");
           router.push({
             pathname: "/call/ringing",
             params: {
@@ -80,14 +82,14 @@ const useVoiceCall = (roomId?: string) => {
           });
           break;
         case "call.ended":
-          setIsInCall(false);
+          setCallStatus("idle");
           router.back();
           break;
       }
     }
   }, [lastMessage]);
 
-  return { init, reqeustCall, endCall };
+  return { init, callStatus, reqeustCall, endCall };
 };
 
 export default useVoiceCall;

@@ -42,7 +42,13 @@
         }
       ],
       "@config-plugins/react-native-webrtc",
-      "expo-audio"
+      "expo-audio",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
