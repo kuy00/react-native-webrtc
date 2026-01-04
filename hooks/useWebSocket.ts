@@ -2,6 +2,7 @@ import { WebSocketContext } from "@/providers/WebSocketProvider";
 import { WebSocketMessageType } from "@/types/webSocket";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { Platform } from "react-native";
 
 const useWebSocket = () => {
   const wsRef = useContext(WebSocketContext);
@@ -13,9 +14,11 @@ const useWebSocket = () => {
   const [lastMessage, setLastMessage] = useState<WebSocketMessageType | null>(
     null
   );
+  const clientTag = `${Platform.OS}-${Math.random().toString(16).slice(2, 6)}`;
 
   const sendMessage = useCallback(
     (message: string) => {
+      console.log(clientTag, "[WebSocket] Sending message:", message);
       if (ws?.readyState === WebSocket.OPEN) {
         ws?.send(message);
       } else {
@@ -27,6 +30,7 @@ const useWebSocket = () => {
 
   const messageHandler = useCallback((event: WebSocketMessageEvent) => {
     const message = JSON.parse(event.data);
+    console.log(clientTag, "[WebSocket] Received message:", message);
     setLastMessage(message);
   }, []);
 
@@ -65,7 +69,7 @@ const useWebSocket = () => {
     }
   }, [ws, status]);
 
-  return { sendMessage, lastMessage };
+  return { clientTag, sendMessage, lastMessage };
 };
 
 export default useWebSocket;

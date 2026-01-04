@@ -1,24 +1,28 @@
 import Page from "@/components/Page";
-import useVoiceCall from "@/hooks/useVoiceCall";
+import useCall from "@/hooks/useCall";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAudioPlayer } from "expo-audio";
-import { useLocalSearchParams } from "expo-router";
-import { useEffect } from "react";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useCallback } from "react";
 import { Pressable, Text, View } from "react-native";
 
 const Ringing = () => {
   const { roomId, toUserId } = useLocalSearchParams();
-  const { callStatus, endCall } = useVoiceCall(roomId as string);
+  const { endCall } = useCall(roomId as string);
   const player = useAudioPlayer(require("@/assets/sounds/call_waiting.mp3"));
 
-  useEffect(() => {
-    if (callStatus === "connected") {
-      player.pause();
-    } else {
+  useFocusEffect(
+    useCallback(() => {
       player.loop = true;
       player.play();
-    }
-  }, [callStatus, player]);
+
+      return () => {
+        try {
+          player.pause();
+        } catch {}
+      };
+    }, [])
+  );
 
   return (
     <Page className="bg-black justify-between items-center py-10 px-16">

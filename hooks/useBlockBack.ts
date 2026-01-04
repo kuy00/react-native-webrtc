@@ -8,6 +8,9 @@ export const useBlockExit = (enabled: boolean) => {
   useEffect(() => {
     const sub = navigation.addListener("beforeRemove", (e) => {
       if (!enabled) return;
+
+      if (e.data.action.type === "REPLACE") return;
+
       e.preventDefault();
     });
 

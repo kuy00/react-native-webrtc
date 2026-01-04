@@ -1,16 +1,15 @@
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "react-native";
+
 import { useBlockExit } from "./useBlockBack";
 import useWebSocket from "./useWebSocket";
 
-const useVoiceCall = (roomId?: string) => {
+const useCall = (roomId?: string) => {
   const { sendMessage, lastMessage } = useWebSocket();
-  const [callStatus, setCallStatus] = useState<
-    "idle" | "waiting" | "connected"
-  >("idle");
+  const [isInCall, setIsInCall] = useState(false);
 
-  useBlockExit(callStatus !== "idle");
+  useBlockExit(isInCall);
 
   const init = useCallback(
     (userId: number) => {
@@ -40,6 +39,17 @@ const useVoiceCall = (roomId?: string) => {
     [sendMessage]
   );
 
+  const acceptCall = useCallback(() => {
+    sendMessage(
+      JSON.stringify({
+        type: "call.accept",
+        data: {
+          room_id: roomId,
+        },
+      })
+    );
+  }, [sendMessage, roomId]);
+
   const endCall = useCallback(() => {
     sendMessage(
       JSON.stringify({
@@ -53,14 +63,12 @@ const useVoiceCall = (roomId?: string) => {
 
   useEffect(() => {
     if (lastMessage) {
-      console.log("Voice Call Message:", lastMessage);
-
       switch (lastMessage.type) {
         case "error":
           Alert.alert("Error", lastMessage.data.reason);
           break;
         case "call.incoming":
-          setCallStatus("waiting");
+          setIsInCall(true);
           router.push({
             pathname: "/call/incoming",
             params: {
@@ -71,7 +79,7 @@ const useVoiceCall = (roomId?: string) => {
           });
           break;
         case "call.ringing":
-          setCallStatus("waiting");
+          setIsInCall(true);
           router.push({
             pathname: "/call/ringing",
             params: {
@@ -81,15 +89,27 @@ const useVoiceCall = (roomId?: string) => {
             },
           });
           break;
+        case "call.ready":
+          setIsInCall(true);
+          router.push({
+            pathname: "/call/active",
+            params: {
+              roomId: lastMessage.data.room_id,
+              role: lastMessage.data.role,
+              fromUserId: lastMessage.data.from_user_id,
+              toUserId: lastMessage.data.to_user_id,
+            },
+          });
+          break;
         case "call.ended":
-          setCallStatus("idle");
-          router.back();
+          setIsInCall(false);
+          router.replace("/");
           break;
       }
     }
   }, [lastMessage]);
 
-  return { init, callStatus, reqeustCall, endCall };
+  return { init, reqeustCall, acceptCall, endCall };
 };
 
-export default useVoiceCall;
+export default useCall;

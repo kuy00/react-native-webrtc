@@ -1,4 +1,4 @@
-import useVoiceCall from "@/hooks/useVoiceCall";
+import useCall from "@/hooks/useCall";
 import { getRandomInt } from "@/utils/random";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useEffect, useState } from "react";
@@ -14,7 +14,7 @@ import {
 const Index = () => {
   const [userId, setUserId] = useState(0);
   const [toUserId, setToUserId] = useState("");
-  const { init, reqeustCall } = useVoiceCall();
+  const { init, reqeustCall } = useCall();
 
   useEffect(() => {
     const _userId = getRandomInt(1000);

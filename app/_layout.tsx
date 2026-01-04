@@ -6,7 +6,10 @@ export default function RootLayout() {
   return (
     <WebSocketProvider>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
+        <Stack.Screen
+          name="index"
+          options={{ gestureEnabled: false, headerBackVisible: false }}
+        />
         <Stack.Screen
           name="call"
           options={{ gestureEnabled: false, headerBackVisible: false }}
