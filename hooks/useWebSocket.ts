@@ -1,84 +1,71 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-
-const WS_URL = process.env.EXPO_PUBLIC_WEBSOCKET_URL;
+import { WebSocketContext } from "@/providers/WebSocketProvider";
+import { WebSocketMessageType } from "@/types/webSocket";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
 const useWebSocket = () => {
-  const webSocketRef = useRef<WebSocket | null>(null);
+  const wsRef = useContext(WebSocketContext);
+  const ws = wsRef?.current;
   const messageQueue = useRef<string[]>([]);
   const [status, setStatus] = useState<"idle" | "open" | "close" | "error">(
     "idle"
   );
+  const [lastMessage, setLastMessage] = useState<WebSocketMessageType | null>(
+    null
+  );
 
-  useEffect(() => {
-    webSocketRef.current = new WebSocket(WS_URL!);
+  const sendMessage = useCallback(
+    (message: string) => {
+      if (ws?.readyState === WebSocket.OPEN) {
+        ws?.send(message);
+      } else {
+        messageQueue.current.push(message);
+      }
+    },
+    [ws]
+  );
 
-    webSocketRef.current.onopen = () => {
-      setStatus("open");
-    };
-
-    webSocketRef.current.onclose = () => {
-      setStatus("close");
-    };
-
-    webSocketRef.current.onerror = () => {
-      setStatus("error");
-    };
-
-    webSocketRef.current.onmessage = (event) => {
-      messageHandler(event);
-    };
-
-    return () => {
-      disconnect();
-    };
+  const messageHandler = useCallback((event: WebSocketMessageEvent) => {
+    const message = JSON.parse(event.data);
+    setLastMessage(message);
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!ws) return;
+
+      const onMessage = (event: MessageEvent) => messageHandler(event);
+      const onOpen = () => setStatus("open");
+      const onClose = () => setStatus("close");
+      const onError = () => setStatus("error");
+
+      ws.addEventListener("open", onOpen);
+      ws.addEventListener("close", onClose);
+      ws.addEventListener("error", onError);
+      ws.addEventListener("message", onMessage);
+
+      return () => {
+        ws.removeEventListener("open", onOpen);
+        ws.removeEventListener("close", onClose);
+        ws.removeEventListener("error", onError);
+        ws.removeEventListener("message", onMessage);
+        messageQueue.current = [];
+      };
+    }, [ws, messageHandler])
+  );
 
   useEffect(() => {
     if (status === "open") {
       while (messageQueue.current.length > 0) {
         const message = messageQueue.current.shift();
         if (message) {
-          webSocketRef.current?.send(message);
+          ws?.send(message);
         }
       }
     }
-  }, [status]);
+  }, [ws, status]);
 
-  const sendMessage = useCallback((message: string) => {
-    console.log("Sending message:", message);
-    if (webSocketRef.current?.readyState === WebSocket.OPEN) {
-      webSocketRef.current.send(message);
-    } else {
-      messageQueue.current.push(message);
-    }
-  }, []);
-
-  const connect = useCallback(
-    (userId: number) => {
-      sendMessage(
-        JSON.stringify({
-          type: "auth",
-          data: {
-            user_id: userId,
-          },
-        })
-      );
-    },
-    [sendMessage]
-  );
-
-  const messageHandler = useCallback((event: WebSocketMessageEvent) => {
-    const message = JSON.parse(event.data);
-    console.log("Received message:", message);
-  }, []);
-
-  const disconnect = useCallback(() => {
-    webSocketRef.current?.close();
-    webSocketRef.current = null;
-    messageQueue.current = [];
-  }, []);
-
-  return { connect };
+  return { sendMessage, lastMessage };
 };
 
 export default useWebSocket;
