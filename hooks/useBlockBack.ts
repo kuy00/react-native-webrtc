@@ -2,7 +2,7 @@ import { useNavigation } from "expo-router";
 import { useEffect } from "react";
 import { BackHandler, Platform } from "react-native";
 
-export const useBlockExit = (enabled: boolean) => {
+export const useBlockBack = (enabled: boolean) => {
   const navigation = useNavigation();
 
   useEffect(() => {

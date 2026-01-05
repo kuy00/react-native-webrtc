@@ -2,14 +2,14 @@ import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "react-native";
 
-import { useBlockExit } from "./useBlockBack";
+import { useBlockBack } from "./useBlockBack";
 import useWebSocket from "./useWebSocket";
 
 const useCall = (roomId?: string) => {
   const { sendMessage, lastMessage } = useWebSocket();
   const [isInCall, setIsInCall] = useState(false);
 
-  useBlockExit(isInCall);
+  useBlockBack(isInCall);
 
   const init = useCallback(
     (userId: number) => {
