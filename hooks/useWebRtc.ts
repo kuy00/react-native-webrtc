@@ -23,8 +23,13 @@ const useWebRtc = (roomId: string, role: string) => {
     const _peerConnection = new RTCPeerConnection({
       iceServers: [
         { urls: process.env.EXPO_PUBLIC_STUN_URL! },
+        { urls: "stun:stun.l.google.com:19302" },
         {
-          urls: `${process.env.EXPO_PUBLIC_TURN_URL!}?transport=udp`,
+          urls: [
+            `${process.env.EXPO_PUBLIC_TURN_URL!}?transport=udp`,
+            `${process.env.EXPO_PUBLIC_TURN_URL!}?transport=tcp`,
+            `${process.env.EXPO_PUBLIC_TURN_SECURE_URL!}?transport=tcp`,
+          ],
           username: process.env.EXPO_PUBLIC_TURN_USERNAME!,
           credential: process.env.EXPO_PUBLIC_TURN_CREDENTIAL!,
         },
